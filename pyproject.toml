@@ -5,6 +5,7 @@ description = ""
 authors = ["Tom Savage <tcsavage@gmail.com>"]
 readme = "README.md"
 packages = [{include = "edf", from = "src"}]
+license = "MIT"
 
 [tool.poetry.scripts]
 edf = "edf.cli:edf_group"
