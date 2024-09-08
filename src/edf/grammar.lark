@@ -1,0 +1,37 @@
+NAME: /[^\W\d]\w*/
+
+STRING: /("(?!"").*?(?<!\\)(\\\\)*?")/i
+LONG_STRING: /(""".*?(?<!\\)(\\\\)*?""")/is
+
+_SEP: /\n+|;/
+_HWS: /[ \t]+/
+_WS: /[ \t\n]+/
+
+COMMENT: /#[^\n]*/
+%ignore COMMENT
+
+%ignore _HWS
+
+%import common.ESCAPED_STRING
+%import common.SIGNED_NUMBER
+
+value: (STRING | LONG_STRING) -> value_string
+      | SIGNED_NUMBER -> value_number
+      | "true" -> value_true
+      | "false" -> value_false
+      | NAME -> value_ref
+
+
+block_head: NAME NAME?
+
+block_body: value -> block_body_single_value
+            | _block_body_entries -> block_body_entries
+
+block_body_entry: NAME "=" value -> block_entry_kv
+                  | block -> block_entry_block
+
+_block_body_entries: block_body_entry (_SEP _WS* _block_body_entries | _SEP?)?
+
+block: block_head "{" _WS*  block_body? _WS* "}" _WS*
+
+document: (block | _WS)*

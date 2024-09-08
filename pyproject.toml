@@ -1,0 +1,19 @@
+[tool.poetry]
+name = "entity-document-format"
+version = "0.1.0"
+description = ""
+authors = ["Tom Savage <tcsavage@gmail.com>"]
+readme = "README.md"
+packages = [{include = "edf", from = "src"}]
+
+[tool.poetry.scripts]
+edf = "edf.cli:edf_group"
+
+[tool.poetry.dependencies]
+python = "^3.12"
+lark = "^1.2.2"
+click = "^8.1.7"
+
+[build-system]
+requires = ["poetry-core"]
+build-backend = "poetry.core.masonry.api"

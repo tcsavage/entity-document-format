@@ -1,0 +1,16 @@
+block foo {
+    attribute foo {
+        type = "string"
+    }
+    
+    sub_block {
+        field = "inners"
+        
+        block inner {
+            anonymous = true
+            attribute bar {
+                type = "number"
+            }
+        }
+    }
+}

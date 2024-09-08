@@ -1,0 +1,11 @@
+foo test {
+    foo = "bar"
+
+    inner {
+        bar = 42
+    }
+
+    inner {
+        bar = 141
+    }
+}
