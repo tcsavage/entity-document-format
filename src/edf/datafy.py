@@ -18,7 +18,7 @@ class BlockSchemaContext:
                 for alias in block.aliases:
                     blocks[alias] = (None, block)
         return cls(blocks=blocks)
-    
+
     @classmethod
     def from_block_schema(cls, block: BlockSchema) -> "BlockSchemaContext":
         attributes = {}
@@ -38,7 +38,7 @@ class BlockSchemaContext:
                 for alias in block.aliases:
                     blocks[alias] = (sub_block, block)
         return cls(blocks=blocks, attributes=attributes, required_attributes=required_attributes)
-    
+
 
 def datafy_block(schema: BlockSchema, block: Block) -> dict:
     assert block.kind == schema.kind or block.kind in schema.aliases
@@ -83,7 +83,7 @@ def datafy_block(schema: BlockSchema, block: Block) -> dict:
                 data[k] = attribute_schema.default
             else:
                 raise ValueError(f"Missing required attribute: {k}")
-            
+
     # Initialize sub-block fields.
     for sub_block in schema.sub_blocks:
         if sub_block.field in data:
@@ -94,7 +94,7 @@ def datafy_block(schema: BlockSchema, block: Block) -> dict:
             data[sub_block.field] = []
         else:
             raise ValueError(f"Unexpected multiplicity: {sub_block.multiplicity}")
-        
+
     # Process sub-blocks.
     for child in block.children:
         if child.kind not in ctx.blocks:
@@ -110,7 +110,7 @@ def datafy_block(schema: BlockSchema, block: Block) -> dict:
             data[k].append(child_data)
         else:
             raise ValueError(f"Unexpected multiplicity: {sub_block_schema.multiplicity}")
-    
+
     return data
 
 

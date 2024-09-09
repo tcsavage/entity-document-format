@@ -25,7 +25,7 @@ def edf_to_json_cmd(input: TextIO, output: TextIO, schema: TextIO, indent: int, 
     else:
         doc = loads_document(input.read())
         data = canonicalize_json(doc)
-        
+
     if object:
         if len(data) != 1:
             raise ValueError("Expected a single object")

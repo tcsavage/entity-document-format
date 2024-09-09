@@ -14,14 +14,14 @@ class Block:
     @property
     def is_single_value(self) -> bool:
         return self.value is not None and not self.children
-    
+
     @property
     def is_empty(self) -> bool:
         return not self.value and not self.attributes and not self.children
-    
+
     def __getitem__(self, key: str) -> Any:
         return self.attributes[key]
-    
+
     def __setitem__(self, key: str, value: Any) -> None:
         self.attributes[key] = value
 

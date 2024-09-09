@@ -66,23 +66,15 @@ block_schema = BlockSchema(
                     AttributeSchema(name="multiplicity", type="string", default="many"),
                 ],
                 sub_blocks=[
-                    SubBlockSchema(
-                        field="block",
-                        multiplicity="one",
-                        block=lambda: block_schema
-                    )
-                ]
-            )
+                    SubBlockSchema(field="block", multiplicity="one", block=lambda: block_schema)
+                ],
+            ),
         ),
-    ]
+    ],
 )
 
 
-schema_schema = Schema(
-    blocks=[
-        block_schema
-    ]
-)
+schema_schema = Schema(blocks=[block_schema])
 
 
 def analyze_schema_block(block: Block) -> BlockSchema | AttributeSchema | SubBlockSchema:
@@ -133,7 +125,9 @@ def analyze_schema_block(block: Block) -> BlockSchema | AttributeSchema | SubBlo
         if block.value:
             raise ValueError("Sub-block value not supported")
         field = block.attributes["field"]
-        multiplicity = block.attributes["multiplicity"] if "multiplicity" in block.attributes else "many"
+        multiplicity = (
+            block.attributes["multiplicity"] if "multiplicity" in block.attributes else "many"
+        )
         if not block.children:
             raise ValueError("Sub-block missing block schema")
         child_block = block.children[0]
@@ -155,5 +149,5 @@ def analyze_schema_document(doc: Document) -> Schema:
     if not all(isinstance(block, BlockSchema) for block in blocks):
         raise ValueError("Schema document must contain only block schemas at root")
     return Schema(
-        blocks=blocks # type: ignore
+        blocks=blocks  # type: ignore
     )
