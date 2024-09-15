@@ -162,12 +162,26 @@ class Parser:
                 state = self.pop_state(expected_state_ids={StateId.BLOCK_INTRODUCER, StateId.BLOCK_NAMED})
                 self.emit_node(node_block, token)
             case StateId.BLOCK_BODY_UNKNOWN | StateId.BLOCK_BODY_AGGREGATE, TokenId.ID_NAME:
-                self.pop_state()
-                state.id = StateId.BLOCK_BODY_AGGREGATE
-                self.push_state(state)
-                token = self.consume()
-                self.push_state(State(StateId.ATTRIBUTE_INTRODUCER, self.token_index))
-                self.emit_node(node_attribute_introducer, token)
+                # NOTE: At this point we don't know if we're parsing an attribute or a block.
+                # We just have an ID_NAME.
+                # We'll look-ahead to see if the next token is an equals sign.
+                # If it is, we're parsing an attribute. Otherwise we're parsing a block.
+                # First we check that we _can_ look ahead.
+                if self.token_index + 1 >= len(self.tokens):
+                    raise ValueError("Unexpected end of input")
+                if self.tokens[self.token_index + 1].id == TokenId.EQUALS:
+                    # We're parsing an attribute.
+                    self.pop_state()
+                    state.id = StateId.BLOCK_BODY_AGGREGATE
+                    self.push_state(state)
+                    token = self.consume()
+                    self.push_state(State(StateId.ATTRIBUTE_INTRODUCER, self.token_index))
+                    self.emit_node(node_attribute_introducer, token)
+                else:
+                    # We're parsing a block.
+                    token = self.consume()
+                    self.push_state(State(StateId.BLOCK_INTRODUCER, self.token_index))
+                    self.emit_node(node_block_introducer, token)
             case StateId.ATTRIBUTE_INTRODUCER, TokenId.EQUALS:
                 self.push_state(State(StateId.ATTRIBUTE_VALUE, self.token_index))
                 self.push_state(State(StateId.VALUE, self.token_index))
