@@ -204,17 +204,37 @@ class Parser:
 @dataclass
 class ExplicitTreeNode:
     node: Node
+    node_idx: int
     children: Optional[Sequence["ExplicitTreeNode"]] = None
+
+    def build_graphviz(self, graph = None): # -> tuple[graphviz.Digraph, NodeIdStr]:
+        import graphviz
+        if graph is None:
+            graph = graphviz.Digraph()
+        
+        node_id = f"node_{self.node.token.offset}"
+        label = f"{self.node.kind.id.value} @ {self.node_idx} `{self.node.token.value}`"
+        graph.node(node_id, label=label)
+
+        child_node_ids = [child.build_graphviz(graph)[1] for child in self.children] if self.children else []
+        for child_node_id in child_node_ids:
+            graph.edge(node_id, child_node_id)
+        
+        return graph, node_id
+    
+    def render_graphviz(self):
+        graph, _ = self.build_graphviz()
+        graph.render("parse_tree", format="svg", view=True)
 
 
 def build_explicit_tree(nodes: Iterable[Node]) -> ExplicitTreeNode:
     stack = []
-    for node in nodes:
+    for node_idx, node in enumerate(nodes):
         print(f"Processing node {node.kind.id}")
         if node.kind.fixed_num_children:
             children = stack[-node.kind.fixed_num_children:]
             stack[-node.kind.fixed_num_children:] = []
-            stack.append(ExplicitTreeNode(node, children))
+            stack.append(ExplicitTreeNode(node, node_idx, children))
         elif node.kind.bracket:
             idx = -1
             try:
@@ -226,9 +246,9 @@ def build_explicit_tree(nodes: Iterable[Node]) -> ExplicitTreeNode:
                 raise ValueError(f"Could not find bracket for node {node.kind.id} (looking for {node.kind.bracket.id})")
             children = stack[idx:]
             stack[idx:] = []
-            stack.append(ExplicitTreeNode(node, children))
+            stack.append(ExplicitTreeNode(node, node_idx, children))
         else:
-            stack.append(ExplicitTreeNode(node))
+            stack.append(ExplicitTreeNode(node, node_idx))
     assert len(stack) == 1, f"Expected stack to have 1 element, got {len(stack)}"
     return stack[0]
 
@@ -248,4 +268,7 @@ if __name__ == "__main__":
         print(node.kind.id.value, node.kind.fixed_num_children, "=>", node.token.id.value, node.token.value)
 
     print("========== EXPLICIT TREE ==========")
-    pprint.pprint(build_explicit_tree(parser.tree))
+    explicit_tree = build_explicit_tree(parser.tree)
+    pprint.pprint(explicit_tree)
+
+    explicit_tree.render_graphviz()
