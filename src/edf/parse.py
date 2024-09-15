@@ -130,17 +130,13 @@ class Parser:
     def consume_discard(self):
         self.token_index += 1
 
-    def emit_node(self, node: Node):
+    def _emit_node(self, node: Node):
         self.tree.append(node)
 
-    def emit_leaf_node(self, node_kind: NodeKind, token: Token):
-        self.emit_node(Node(node_kind, token))
-
-    def emit_compound_node(self, node_kind: NodeKind, token: Token, start_token_idx: int):
-        self.emit_node(Node(node_kind, token))
+    def emit_node(self, node_kind: NodeKind, token: Token):
+        self._emit_node(Node(node_kind, token))
 
     def step(self):
-        print(f"Stepping at token {self.token_index} ({self.tokens[self.token_index].id}). State: {self.state_stack[-1].id}")
         if not self.state_stack:
             raise ValueError("Empty stack")
         state = self.state_stack[-1]
@@ -150,39 +146,39 @@ class Parser:
                 # So lets push the block introducer state and emit a node, consuming the token.
                 token = self.consume()
                 self.push_state(State(StateId.BLOCK_INTRODUCER, self.token_index))
-                self.emit_node(Node(node_block_introducer, token))
+                self.emit_node(node_block_introducer, token)
             case StateId.BLOCK_INTRODUCER, TokenId.ID_NAME:
                 self.pop_state()
                 state.id = StateId.BLOCK_NAMED
                 self.push_state(state)
-                self.emit_node(Node(node_block_id, self.consume()))
+                self.emit_node(node_block_id, self.consume())
             case StateId.BLOCK_INTRODUCER | StateId.BLOCK_NAMED, TokenId.LBRACE:
                 token = self.consume()
                 self.push_state(State(StateId.BLOCK_BODY_UNKNOWN, self.token_index))
-                self.emit_node(Node(node_block_body_start, token))
+                self.emit_node(node_block_body_start, token)
             case StateId.BLOCK_BODY_UNKNOWN | StateId.BLOCK_BODY_VALUE | StateId.BLOCK_BODY_AGGREGATE, TokenId.RBRACE:
                 token = self.consume()
                 self.pop_state(expected_state_ids={StateId.BLOCK_BODY_UNKNOWN, StateId.BLOCK_BODY_VALUE, StateId.BLOCK_BODY_AGGREGATE})
                 state = self.pop_state(expected_state_ids={StateId.BLOCK_INTRODUCER, StateId.BLOCK_NAMED})
-                self.emit_compound_node(node_block, token, state.start_token_idx)
+                self.emit_node(node_block, token)
             case StateId.BLOCK_BODY_UNKNOWN | StateId.BLOCK_BODY_AGGREGATE, TokenId.ID_NAME:
                 self.pop_state()
                 state.id = StateId.BLOCK_BODY_AGGREGATE
                 self.push_state(state)
                 token = self.consume()
                 self.push_state(State(StateId.ATTRIBUTE_INTRODUCER, self.token_index))
-                self.emit_node(Node(node_attribute_introducer, token))
+                self.emit_node(node_attribute_introducer, token)
             case StateId.ATTRIBUTE_INTRODUCER, TokenId.EQUALS:
                 self.push_state(State(StateId.ATTRIBUTE_VALUE, self.token_index))
                 self.push_state(State(StateId.VALUE, self.token_index))
-                self.emit_leaf_node(node_attribute_assignment, self.consume())
+                self.emit_node(node_attribute_assignment, self.consume())
             case StateId.VALUE, TokenId.LIT_STRING | TokenId.LIT_NUM_DEC:
                 token = self.consume()
                 match token.id:
                     case TokenId.LIT_STRING:
-                        self.emit_leaf_node(node_lit_string, token)
+                        self.emit_node(node_lit_string, token)
                     case TokenId.LIT_NUM_DEC:
-                        self.emit_leaf_node(node_lit_number, token)
+                        self.emit_node(node_lit_number, token)
                     case _:
                         raise ValueError(f"Unexpected token {token.id}")
                 self.pop_state()
@@ -190,15 +186,17 @@ class Parser:
                 # Close the ATTRIBUTE_VALUE state and emit the ATTRIBUTE_ASSIGNMENT node.
                 self.pop_state()
                 self.pop_state([StateId.ATTRIBUTE_INTRODUCER])
-                self.emit_leaf_node(node_attribute, self.consume())
-                
-
-            
+                self.emit_node(node_attribute, self.consume())
 
     def build_tree(self):
         while self.token_index < len(self.tokens):
             self.step()
-        print(f"Final stack: {self.state_stack}")
+
+
+def parse(tokens: Sequence[Token]) -> Sequence[Node]:
+    parser = Parser(tokens)
+    parser.build_tree()
+    return parser.tree
 
 
 @dataclass
@@ -212,7 +210,7 @@ class ExplicitTreeNode:
         if graph is None:
             graph = graphviz.Digraph()
         
-        node_id = f"node_{self.node.token.offset}"
+        node_id = f"node_{self.node_idx}"
         label = f"{self.node.kind.id.value} @ {self.node_idx} `{self.node.token.value}`"
         graph.node(node_id, label=label)
 
@@ -230,7 +228,7 @@ class ExplicitTreeNode:
 def build_explicit_tree(nodes: Iterable[Node]) -> ExplicitTreeNode:
     stack = []
     for node_idx, node in enumerate(nodes):
-        print(f"Processing node {node.kind.id}")
+        print(f"Processing node {node.kind.id} at index {node_idx}")
         if node.kind.fixed_num_children:
             children = stack[-node.kind.fixed_num_children:]
             stack[-node.kind.fixed_num_children:] = []
@@ -244,8 +242,18 @@ def build_explicit_tree(nodes: Iterable[Node]) -> ExplicitTreeNode:
                     idx -= 1
             except IndexError:
                 raise ValueError(f"Could not find bracket for node {node.kind.id} (looking for {node.kind.bracket.id})")
+            print(f"Found bracket at {idx}")
+            print("Stack before:")
+            for i, n in enumerate(stack):
+                print(f" - {i} : {n.node.kind.id} @ {n.node_idx}")
             children = stack[idx:]
+            print("Children:")
+            for i, n in enumerate(stack[idx:]):
+                print(f" - {i} : {n.node.kind.id} @ {n.node_idx}")
             stack[idx:] = []
+            print("Stack after:")
+            for i, n in enumerate(stack):
+                print(f" - {i} : {n.node.kind.id} @ {n.node_idx}")
             stack.append(ExplicitTreeNode(node, node_idx, children))
         else:
             stack.append(ExplicitTreeNode(node, node_idx))
@@ -264,8 +272,8 @@ if __name__ == "__main__":
     parser.build_tree()
 
     print("========== TREE ==========")
-    for node in parser.tree:
-        print(node.kind.id.value, node.kind.fixed_num_children, "=>", node.token.id.value, node.token.value)
+    for idx, node in enumerate(parser.tree):
+        print(node.kind.id.value, idx, "=>", node.token.id.value, node.token.value)
 
     print("========== EXPLICIT TREE ==========")
     explicit_tree = build_explicit_tree(parser.tree)
