@@ -44,5 +44,16 @@ def edf_parse_schema_cmd(input: TextIO, output: TextIO):
     pprint(schema, stream=output)
 
 
+@edf_group.command("to-xml")
+@click.argument("input", type=click.File("r"))
+@click.option("--output", "-o", type=click.File("w"), default="-")
+def edf_to_xml_cmd(input: TextIO, output: TextIO):
+    from edf.io import loads_document
+    from edf.xml import document_to_xml_string
+
+    doc = loads_document(input.read())
+    output.write(document_to_xml_string(doc))
+
+
 if __name__ == "__main__":
     edf_group()
