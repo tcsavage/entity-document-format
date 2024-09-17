@@ -91,7 +91,6 @@ class LexicalAnalyzer:
     tokens: list[Token] = field(default_factory=list)
 
     # Configuration.
-    emit_semicolon_on_eof: bool = True
     strict: bool = False
 
     def match_token(self, token_map: list[tuple[str, TokenId]], word: bool = False) -> Token | None:
@@ -156,18 +155,6 @@ class LexicalAnalyzer:
                 right_delimiter = self.open_delimiters.pop()
                 if right_delimiter == TokenId.RBRACE:
                     self.brace_block_stack.pop()
-                    # if self.tokens[-1].id != TokenId.SEMICOLON:
-                    #     self.tokens.append(
-                    #         Token(
-                    #             TokenId.SEMICOLON,
-                    #             "",
-                    #             self.offset,
-                    #             0,
-                    #             self.line,
-                    #             self.col,
-                    #             fabricated=True,
-                    #         )
-                    #     )
                 self.tokens.append(
                     Token(
                         right_delimiter,
@@ -180,17 +167,6 @@ class LexicalAnalyzer:
                         error=True,
                     )
                 )
-            # # Add a semicolon to the end of the file.
-            # if (
-            #     self.tokens
-            #     and self.tokens[-1].id != TokenId.SEMICOLON
-            #     and self.emit_semicolon_on_eof
-            # ):
-            #     self.tokens.append(
-            #         Token(
-            #             TokenId.SEMICOLON, "", self.offset, 0, self.line, self.col, fabricated=True
-            #         )
-            #     )
 
         # Core of semicolon insertion.
         # The grammar of the language uses semicolons to terminate attribute
@@ -255,14 +231,6 @@ class LexicalAnalyzer:
                             fabricated=True,
                         )
                     )
-            # elif self.col == 0 and self.tokens and self.tokens[-1].id != TokenId.SEMICOLON:
-            #     # If we're not in a brace block and the token is at the start of a line, insert a semicolon.
-            #     # This is for top-level definitions.
-            #     self.tokens.append(
-            #         Token(
-            #             TokenId.SEMICOLON, "", self.offset, 0, self.line, self.col, fabricated=True
-            #         )
-            #     )
 
         # Finally we can add the original input token to the output.
         # The EOF token is special and is not actually added to the token list.
@@ -347,8 +315,8 @@ def rebuild_string(source: str, tokens: list[Token]) -> str:
     return "·".join(source[token.offset : token.offset + token.size] for token in tokens)
 
 
-def tokenize(source: str, emit_semicolon_on_eof: bool = True) -> list[Token]:
-    lexer = LexicalAnalyzer(source, emit_semicolon_on_eof=emit_semicolon_on_eof)
+def tokenize(source: str) -> list[Token]:
+    lexer = LexicalAnalyzer(source)
     while lexer.read_token():
         pass
     return lexer.tokens
