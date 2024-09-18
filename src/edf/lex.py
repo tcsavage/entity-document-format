@@ -240,20 +240,26 @@ class LexicalAnalyzer:
     def read_token(self) -> bool:
         while True:
             if self.offset >= len(self.source):
+                # EOF. Emit the EOF token and return False to indicate we're done.
                 self.emit_token(Token(TokenId.EOF, "", self.offset, 0, self.line, self.col))
                 return False
+            # Not EOF, so let's read the next token.
             c = self.source[self.offset]
             if self.source.startswith("\r\n", self.offset):
+                # Windows newline.
                 self.line += 1
                 self.col = 1
                 self.offset += 2
                 self.first_token_on_line = True
             elif c in {"\r", "\n"}:
+                # Unix newline.
                 self.line += 1
                 self.col = 1
                 self.offset += 1
                 self.first_token_on_line = True
             elif c.isspace():
+                # Skip other whitespace.
+                # I.e. Unicode general category Zs, or bidi class WS, B or S.
                 self.offset += 1
                 self.col += 1
             elif c == "#":
@@ -264,6 +270,7 @@ class LexicalAnalyzer:
                     self.offset += 1
                     self.col += 1
             else:
+                # Stop skipping.
                 break
 
         if self.first_token_on_line:
