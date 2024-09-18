@@ -71,17 +71,23 @@ def build(parse_tree: Sequence[Node]) -> Document:
                 # Get attributes and blocks.
                 attributes = {}
                 blocks = []
+                block_value = None
                 for child in children:
                     if child.node.kind.id == NodeId.ATTRIBUTE:
                         name, value = child.value
                         attributes[name] = value
                     elif child.node.kind.id == NodeId.BLOCK:
                         blocks.append(child.value)
+                    elif not attributes and not blocks and len(children) == 1:
+                        block_value = child.value
                     else:
                         raise ValueError(f"Unexpected node in block body: {child.node.kind.id}")
                 
                 # Create block
-                block = Block(kind, block_id, attributes=attributes, children=blocks)
+                if block_value is not None:
+                    block = Block(kind, block_id, value=block_value)
+                else:
+                    block = Block(kind, block_id, attributes=attributes, children=blocks)
                 stack.append(StackElem(node, block))
             case _:
                 stack.append(StackElem(node))

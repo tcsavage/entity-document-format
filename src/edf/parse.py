@@ -162,6 +162,12 @@ class Parser:
                 state = self.pop_state(expected_state_ids={StateId.BLOCK_INTRODUCER, StateId.BLOCK_NAMED})
                 self.emit_node(node_block, token)
             case StateId.BLOCK_BODY_UNKNOWN | StateId.BLOCK_BODY_AGGREGATE, TokenId.ID_NAME:
+                # We're parsing an ID_NAME. This could be an attribute or a block.
+                # But we at least know that it's not a value.
+                # So we switch to the BLOCK_BODY_AGGREGATE state.
+                self.pop_state()
+                state.id = StateId.BLOCK_BODY_AGGREGATE
+                self.push_state(state)
                 # NOTE: At this point we don't know if we're parsing an attribute or a block.
                 # We just have an ID_NAME.
                 # We'll look-ahead to see if the next token is an equals sign.
@@ -171,9 +177,6 @@ class Parser:
                     raise ValueError("Unexpected end of input")
                 if self.tokens[self.token_index + 1].id == TokenId.EQUALS:
                     # We're parsing an attribute.
-                    self.pop_state()
-                    state.id = StateId.BLOCK_BODY_AGGREGATE
-                    self.push_state(state)
                     token = self.consume()
                     self.push_state(State(StateId.ATTRIBUTE_INTRODUCER, self.token_index))
                     self.emit_node(node_attribute_introducer, token)
@@ -182,6 +185,17 @@ class Parser:
                     token = self.consume()
                     self.push_state(State(StateId.BLOCK_INTRODUCER, self.token_index))
                     self.emit_node(node_block_introducer, token)
+            case StateId.BLOCK_BODY_UNKNOWN, _:
+                # We're not parsing an ID_NAME, so we must be parsing a value.
+                # We switch to the BLOCK_BODY_VALUE state.
+                self.pop_state()
+                state.id = StateId.BLOCK_BODY_VALUE
+                self.push_state(state)
+                # We need to parse a value here.
+                self.push_state(State(StateId.VALUE, self.token_index))
+            case StateId.BLOCK_BODY_VALUE, TokenId.SEMICOLON:
+                # Consume the semicolon.
+                self.consume_discard()
             case StateId.ATTRIBUTE_INTRODUCER, TokenId.EQUALS:
                 self.push_state(State(StateId.ATTRIBUTE_VALUE, self.token_index))
                 self.push_state(State(StateId.VALUE, self.token_index))
@@ -201,7 +215,8 @@ class Parser:
                 self.pop_state()
                 self.pop_state([StateId.ATTRIBUTE_INTRODUCER])
                 self.emit_node(node_attribute, self.consume())
-
+            case _, _:
+                raise ValueError(f"Unexpected state {state.id} with token {self.tokens[self.token_index].id}")
     def build_tree(self):
         while self.token_index < len(self.tokens):
             self.step()
