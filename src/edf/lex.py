@@ -256,6 +256,13 @@ class LexicalAnalyzer:
             elif c.isspace():
                 self.offset += 1
                 self.col += 1
+            elif c == "#":
+                # Comment, skip to end of line.
+                # NOTE: We skip _to_ the end of the line, not past it.
+                # Other rules will handle the newline.
+                while self.offset < len(self.source) and self.source[self.offset] not in {"\r", "\n"}:
+                    self.offset += 1
+                    self.col += 1
             else:
                 break
 
