@@ -45,6 +45,20 @@ toks_simple_anon = [
     Token(TokenId.RBRACE, "}", 53, 1, 4, 1),
 ]
 
+doc_simple_value = """\
+anon_block {
+    "value"
+}
+"""
+
+toks_simple_value = [
+    Token(TokenId.ID_NAME, "anon_block", 0, 10, 1, 1),
+    Token(TokenId.LBRACE, "{", 11, 1, 1, 12),
+    Token(TokenId.LIT_STRING, '"value"', 17, 7, 2, 5),
+    Token(TokenId.SEMICOLON, "", 26, 0, 3, 2, fabricated=True),
+    Token(TokenId.RBRACE, "}", 25, 1, 3, 1),
+]
+
 doc_nested = """\
 anon_block {
     key1 = "value1"
@@ -164,6 +178,7 @@ toks_one_liner = [
     [
         (doc_simple_named, toks_simple_named),
         (doc_simple_anon, toks_simple_anon),
+        (doc_simple_value, toks_simple_value),
         (doc_nested, toks_nested),
         (doc_explicit_semis, toks_explicit_semis),
         (doc_explicit_semis_missing_final, toks_explicit_semis_missing_final),
