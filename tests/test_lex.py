@@ -1,6 +1,6 @@
 import pytest
 
-from edf.lex import tokenize, Token, TokenId
+from edf.lex import LexicalError, tokenize, Token, TokenId
 
 doc_simple_named = """\
 named_block block_name {
@@ -239,7 +239,19 @@ toks_multi_line_attr = [
         (doc_multi_line_attr, toks_multi_line_attr),
     ],
 )
-def test_build(text, expected):
+def test_tokenize(text, expected):
     toks = tokenize(text)
 
     assert toks == expected
+
+
+@pytest.mark.parametrize(
+    "input",
+    [
+        "ab?cd",
+        '"abc',
+    ]
+)
+def test_tokenize_invalid(input):
+    with pytest.raises(LexicalError):
+        tokenize(input)
