@@ -172,6 +172,58 @@ toks_one_liner = [
     Token(TokenId.RBRACE, "}", 58, 1, 1, 59),
 ]
 
+doc_whitespace_comments = """\
+# This is a comment
+named_block block_name{
+
+    # This is another comment
+    key1  ="value1"
+
+    key2=   "value2"
+
+}
+
+
+"""
+
+toks_whitespace_comments = [
+    Token(TokenId.ID_NAME, "named_block", 20, 11, 2, 1),
+    Token(TokenId.ID_NAME, "block_name", 32, 10, 2, 13),
+    Token(TokenId.LBRACE, "{", 42, 1, 2, 23),
+    Token(TokenId.ID_NAME, "key1", 79, 4, 5, 5),
+    Token(TokenId.EQUALS, "=", 85, 1, 5, 11),
+    Token(TokenId.LIT_STRING, '"value1"', 86, 8, 5, 12),
+    Token(TokenId.SEMICOLON, "", 100, 0, 7, 5, fabricated=True),
+    Token(TokenId.ID_NAME, "key2", 100, 4, 7, 5),
+    Token(TokenId.EQUALS, "=", 104, 1, 7, 9),
+    Token(TokenId.LIT_STRING, '"value2"', 108, 8, 7, 13),
+    Token(TokenId.SEMICOLON, "", 119, 0, 9, 2, fabricated=True),
+    Token(TokenId.RBRACE, "}", 118, 1, 9, 1),
+]
+
+doc_multi_line_attr = """\
+named_block block_name {
+    key1 = "value1"
+    key2 =
+        "value2"
+}
+"""
+
+toks_multi_line_attr = [
+    Token(TokenId.ID_NAME, "named_block", 0, 11, 1, 1),
+    Token(TokenId.ID_NAME, "block_name", 12, 10, 1, 13),
+    Token(TokenId.LBRACE, "{", 23, 1, 1, 24),
+    Token(TokenId.ID_NAME, "key1", 29, 4, 2, 5),
+    Token(TokenId.EQUALS, "=", 34, 1, 2, 10),
+    Token(TokenId.LIT_STRING, '"value1"', 36, 8, 2, 12),
+    Token(TokenId.SEMICOLON, "", 49, 0, 3, 5, fabricated=True),
+    Token(TokenId.ID_NAME, "key2", 49, 4, 3, 5),
+    Token(TokenId.EQUALS, "=", 54, 1, 3, 10),
+    Token(TokenId.LIT_STRING, '"value2"', 64, 8, 4, 9),
+    Token(TokenId.SEMICOLON, "", 74, 0, 5, 2, fabricated=True),
+    Token(TokenId.RBRACE, "}", 73, 1, 5, 1),
+]
+
 
 @pytest.mark.parametrize(
     "text, expected",
@@ -183,6 +235,8 @@ toks_one_liner = [
         (doc_explicit_semis, toks_explicit_semis),
         (doc_explicit_semis_missing_final, toks_explicit_semis_missing_final),
         (doc_one_liner, toks_one_liner),
+        (doc_whitespace_comments, toks_whitespace_comments),
+        (doc_multi_line_attr, toks_multi_line_attr),
     ],
 )
 def test_build(text, expected):
