@@ -3,7 +3,7 @@ from dataclasses import dataclass
 from enum import Enum
 from typing import Optional
 
-from edf.lex import Token, TokenId
+from edf.parser.lex import Token, TokenId
 
 
 class NodeId(Enum):
@@ -292,7 +292,7 @@ def build_explicit_tree(nodes: Iterable[Node]) -> ExplicitTreeNode:
 if __name__ == "__main__":
     import pprint
     import sys
-    from edf.lex import tokenize
+    from edf.parser.lex import tokenize
 
     text = sys.stdin.read()
     toks = tokenize(text)

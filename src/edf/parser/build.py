@@ -1,8 +1,9 @@
 from collections.abc import Sequence
 from dataclasses import dataclass
 from typing import Any
+
 from edf.block import Block, Document
-from edf.parse import Node, NodeId
+from edf.parser.parse import Node, NodeId
 
 
 @dataclass
@@ -101,8 +102,8 @@ if __name__ == "__main__":
     import pprint
     import sys
 
-    from edf.lex import tokenize
-    from edf.parse import parse
+    from edf.parser.lex import tokenize
+    from edf.parser.parse import parse
 
     text = sys.stdin.read()
     toks = tokenize(text)
