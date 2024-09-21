@@ -1,11 +1,15 @@
 # Entity Document Format
 
 > [!WARNING]
-> This project is in a very early stage of development. Do not trust it. Do not use it. Do not look at it. Do not think about it. Do not even think about thinking about it. Or do. But you've been warned.
+> This project is in a very early stage of development and may never reach maturity. Do not trust it. Do not use it. Do not look at it. Do not think about it. Do not even think about thinking about it. Or do. But you've been warned.
 
 This library implements a simple format for human-readable documents that can be used to describe entities in a tree structure. The format is designed to be easy for humans to read and write. It might be slightly harder for machines to process however.
 
 EDF takes inspiration from many places, but primarily HCL (HashiCorp Configuration Language) and Python.
+
+This project currently has two goals:
+- To validate this format as a useful way to describe entities
+- To be a vehicle for learning about the parsing strategy employed by the [Carbon toolchain](https://github.com/carbon-language/carbon-lang/blob/580e84513c804ba10127f287159bc1279b62f2aa/toolchain/docs/parse.md)
 
 ## Running the example
 
