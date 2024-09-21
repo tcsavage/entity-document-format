@@ -12,7 +12,6 @@ edf = "edf.cli:edf_group"
 
 [tool.poetry.dependencies]
 python = "^3.12"
-lark = "^1.2.2"
 click = "^8.1.7"
 
 [tool.poetry.group.dev.dependencies]
