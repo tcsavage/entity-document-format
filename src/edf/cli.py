@@ -13,8 +13,9 @@ def edf_group():
 @click.option("--output", "-o", type=click.File("w"), default="-")
 @click.option("--schema", "-s", type=click.File("r"))
 @click.option("--indent", "-i", type=int, default=2)
+@click.option("--compact", "-c", is_flag=True, help="Produce compact JSON output")
 @click.option("--object", is_flag=True, help="Interpret the input as an object instead of a list")
-def edf_to_json_cmd(input: TextIO, output: TextIO, schema: TextIO, indent: int, object: bool):
+def edf_to_json_cmd(input: TextIO, output: TextIO, schema: TextIO, indent: int, compact: bool, object: bool):
     import json
     from edf.canonical import canonicalize_json
     from edf.io import loads_schema, loads_data, loads_document
@@ -30,7 +31,7 @@ def edf_to_json_cmd(input: TextIO, output: TextIO, schema: TextIO, indent: int, 
         if len(data) != 1:
             raise ValueError("Expected a single object")
         data = data[0]
-    json.dump(data, output, indent=indent)
+    json.dump(data, output, indent=None if compact else indent)
 
 
 @edf_group.command("parse-schema")
