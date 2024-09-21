@@ -3,6 +3,7 @@ from dataclasses import dataclass
 from typing import Any
 
 from edf.block import Block, Document
+from edf.parser.lex import TokenId
 from edf.parser.parse import Node, NodeId
 
 
@@ -28,6 +29,14 @@ def build(parse_tree: Sequence[Node]) -> Document:
                 else:
                     value = int(s)
                 stack.append(StackElem(node, value))
+            case NodeId.LIT_BOOL:
+                match node.token.id:
+                    case TokenId.KW_TRUE:
+                        stack.append(StackElem(node, True))
+                    case TokenId.KW_FALSE:
+                        stack.append(StackElem(node, False))
+                    case _:
+                        raise ValueError(f"Unexpected token id: {node.token.id}")
             case NodeId.ATTRIBUTE:
                 idx = -1
                 while stack[idx].node.kind.id != NodeId.ATTRIBUTE_INTRODUCER:

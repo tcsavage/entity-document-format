@@ -16,6 +16,7 @@ class NodeId(Enum):
     ATTRIBUTE = "ATTRIBUTE"
     LIT_STRING = "LIT_STRING"
     LIT_NUMBER = "LIT_NUMBER"
+    LIT_BOOL = "LIT_BOOL"
 
 
 @dataclass
@@ -44,6 +45,7 @@ node_attribute = NodeKind(NodeId.ATTRIBUTE, bracket=node_attribute_introducer)
 
 node_lit_string = NodeKind(NodeId.LIT_STRING)
 node_lit_number = NodeKind(NodeId.LIT_NUMBER)
+node_lit_bool = NodeKind(NodeId.LIT_BOOL)
 
 
 node_kinds = {
@@ -56,6 +58,7 @@ node_kinds = {
     NodeId.ATTRIBUTE: node_attribute,
     NodeId.LIT_STRING: node_lit_string,
     NodeId.LIT_NUMBER: node_lit_number,
+    NodeId.LIT_BOOL: node_lit_bool,
 }
 
 
@@ -199,13 +202,15 @@ class Parser:
                 self.push_state(State(StateId.ATTRIBUTE_VALUE, self.token_index))
                 self.push_state(State(StateId.VALUE, self.token_index))
                 self.emit_node(node_attribute_assignment, self.consume())
-            case StateId.VALUE, TokenId.LIT_STRING | TokenId.LIT_NUM_DEC:
+            case StateId.VALUE, TokenId.LIT_STRING | TokenId.LIT_NUM_DEC | TokenId.KW_TRUE | TokenId.KW_FALSE:
                 token = self.consume()
                 match token.id:
                     case TokenId.LIT_STRING:
                         self.emit_node(node_lit_string, token)
                     case TokenId.LIT_NUM_DEC:
                         self.emit_node(node_lit_number, token)
+                    case TokenId.KW_TRUE | TokenId.KW_FALSE:
+                        self.emit_node(node_lit_bool, token)
                     case _:
                         raise ValueError(f"Unexpected token {token.id}")
                 self.pop_state()
