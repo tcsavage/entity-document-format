@@ -6,6 +6,6 @@ foo test {
     }
 
     inner {
-        bar = 141
+        bar = 141.221
     }
 }
