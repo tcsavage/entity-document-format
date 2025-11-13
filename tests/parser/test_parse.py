@@ -1,7 +1,7 @@
 import pytest
 
-from edf.lex import tokenize
-from edf.parse import NodeId, parse
+from edf.parser.lex import tokenize
+from edf.parser.parse import NodeId, parse
 
 
 doc_simple_named = """\

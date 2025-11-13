@@ -1,6 +1,6 @@
 import pytest
 
-from edf.lex import LexicalError, tokenize, Token, TokenId
+from edf.parser.lex import LexicalError, tokenize, Token, TokenId
 
 doc_simple_named = """\
 named_block block_name {
